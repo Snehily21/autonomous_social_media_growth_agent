@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+env/
+venv/
+.venv/
+
+# Local database
+data/app.db
+
+# Vector DB
+data/vector_store/
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+
