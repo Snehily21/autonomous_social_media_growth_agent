@@ -15,7 +15,7 @@ st.write(
     "creates a content strategy and generates social media posts."
 )
 
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://autonomous-social-media-growth-agent.onrender.com"
 
 
 # PROFILE INPUT
