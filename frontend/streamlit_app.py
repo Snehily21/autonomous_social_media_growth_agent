@@ -1,4 +1,8 @@
 import streamlit as st
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.orchestrator.workflow import run_pipeline
 from backend.agents.hashtag_agent import HashtagAgent
