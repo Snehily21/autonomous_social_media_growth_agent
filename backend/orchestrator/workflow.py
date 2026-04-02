@@ -2,7 +2,6 @@ from langgraph.graph import StateGraph, END
 from typing import TypedDict, List
 
 from backend.rag.retriever import Retriever
-
 from backend.agents.profile_agent import ProfileAgent
 from backend.agents.competitor_agent import CompetitorAgent
 from backend.agents.calendar_agent import CalendarAgent
@@ -11,7 +10,7 @@ from backend.agents.hashtag_agent import HashtagAgent
 from backend.agents.visual_agent import VisualAgent
 
 
-# GRAPH STATE
+# STATE STRUCTURE
 
 class AgentState(TypedDict):
 
@@ -38,7 +37,7 @@ hashtag_agent = HashtagAgent()
 visual_agent = VisualAgent()
 
 
-# NODE FUNCTIONS
+# PROFILE ANALYSIS
 
 def run_profile_analysis(state: AgentState):
 
@@ -52,6 +51,8 @@ def run_profile_analysis(state: AgentState):
     return state
 
 
+# COMPETITOR ANALYSIS
+
 def run_competitor_analysis(state: AgentState):
 
     result = competitor_agent.analyze_competitors(
@@ -60,7 +61,6 @@ def run_competitor_analysis(state: AgentState):
 
     state["competitor_report"] = result
 
-    # Store reports in vector DB for RAG
     retriever.store_analysis_reports(
         state["profile_report"],
         state["competitor_report"]
@@ -68,6 +68,8 @@ def run_competitor_analysis(state: AgentState):
 
     return state
 
+
+# CALENDAR GENERATION
 
 def run_calendar_generation(state: AgentState):
 
@@ -82,6 +84,8 @@ def run_calendar_generation(state: AgentState):
     return state
 
 
+# CONTENT GENERATION
+
 def run_content_generation(state: AgentState):
 
     calendar = state["calendar"]
@@ -89,13 +93,7 @@ def run_content_generation(state: AgentState):
 
     generated_posts = []
 
-    if not isinstance(calendar, list):
-        calendar = []
-
     for item in calendar:
-
-        if not isinstance(item, dict):
-            continue
 
         topic = item.get("topic")
         platform = item.get("platform")
@@ -143,22 +141,18 @@ def build_workflow():
     return workflow
 
 
-# RUN PIPELINE
+# PIPELINE RUN FUNCTION
 
-def run_pipeline(input_data):
+workflow = build_workflow()
 
-    workflow = build_workflow()
 
-    initial_state = {
-        "linkedin_text": input_data.get("linkedin_profile", ""),
-        "twitter_text": input_data.get("twitter_profile", ""),
+def run_pipeline(data):
 
-        "profile_report": {},
-        "competitor_report": {},
-        "calendar": [],
-        "generated_posts": []
-    }
+    result = workflow.invoke({
 
-    result = workflow.invoke(initial_state)
+        "linkedin_text": data["linkedin_text"],
+        "twitter_text": data["twitter_text"]
 
-    return result["generated_posts"]
+    })
+
+    return result
