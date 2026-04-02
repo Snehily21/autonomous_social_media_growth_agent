@@ -1,5 +1,6 @@
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List
+
 from backend.rag.retriever import Retriever
 
 from backend.agents.profile_agent import ProfileAgent
@@ -8,7 +9,6 @@ from backend.agents.calendar_agent import CalendarAgent
 from backend.agents.copy_agent import CopyAgent
 from backend.agents.hashtag_agent import HashtagAgent
 from backend.agents.visual_agent import VisualAgent
-
 
 
 # GRAPH STATE
@@ -25,10 +25,10 @@ class AgentState(TypedDict):
     generated_posts: List
 
 
-
 # INITIALIZE AGENTS
 
-retriever=Retriever()
+retriever = Retriever()
+
 profile_agent = ProfileAgent()
 competitor_agent = CompetitorAgent()
 calendar_agent = CalendarAgent()
@@ -127,23 +127,38 @@ def build_workflow():
     graph = StateGraph(AgentState)
 
     graph.add_node("profile_analysis", run_profile_analysis)
-
     graph.add_node("competitor_analysis", run_competitor_analysis)
-
     graph.add_node("calendar_generation", run_calendar_generation)
-
     graph.add_node("content_generation", run_content_generation)
 
     graph.set_entry_point("profile_analysis")
 
     graph.add_edge("profile_analysis", "competitor_analysis")
-
     graph.add_edge("competitor_analysis", "calendar_generation")
-
     graph.add_edge("calendar_generation", "content_generation")
-
     graph.add_edge("content_generation", END)
 
     workflow = graph.compile()
 
     return workflow
+
+
+# RUN PIPELINE
+
+def run_pipeline(input_data):
+
+    workflow = build_workflow()
+
+    initial_state = {
+        "linkedin_text": input_data.get("linkedin_profile", ""),
+        "twitter_text": input_data.get("twitter_profile", ""),
+
+        "profile_report": {},
+        "competitor_report": {},
+        "calendar": [],
+        "generated_posts": []
+    }
+
+    result = workflow.invoke(initial_state)
+
+    return result["generated_posts"]

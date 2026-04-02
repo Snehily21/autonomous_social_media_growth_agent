@@ -1,12 +1,14 @@
 import streamlit as st
-import requests
 
+from backend.orchestrator.workflow import run_pipeline
 
 
 st.set_page_config(
     page_title="Autonomous Social Media Growth Agent",
+    page_icon="🚀",
     layout="wide"
 )
+
 
 st.title("🚀 Autonomous Social Media Growth Agent")
 
@@ -15,145 +17,57 @@ st.write(
     "creates a content strategy and generates social media posts."
 )
 
-API_URL = "https://localhost:8000"
 
+st.divider()
 
-# PROFILE INPUT
+st.subheader("Profile Input")
 
-
-st.header("Profile Input")
-
-linkedin_text = st.text_area(
+linkedin_input = st.text_area(
     "LinkedIn Profile Content",
-    height=150,
-    placeholder="Paste LinkedIn profile text or posts..."
+    placeholder="Paste LinkedIn profile text or posts...",
+    height=200
 )
 
-twitter_text = st.text_area(
+twitter_input = st.text_area(
     "Twitter / X Profile Content",
-    height=150,
-    placeholder="Paste Twitter bio or tweets..."
+    placeholder="Paste Twitter bio or tweets...",
+    height=200
 )
 
 
-# RUN PIPELINE
+st.divider()
 
+if st.button("Generate Content Strategy", use_container_width=True):
 
-if st.button("Generate Content Strategy"):
+    if not linkedin_input and not twitter_input:
+        st.warning("Please provide at least one profile input.")
+        st.stop()
 
-    if not linkedin_text and not twitter_text:
+    with st.spinner("🤖 AI agents are analyzing your profile..."):
 
-        st.warning("Please enter profile content")
+        try:
 
-    else:
+            result = run_pipeline({
+                "linkedin_profile": linkedin_input,
+                "twitter_profile": twitter_input
+            })
 
-        with st.spinner("Running AI pipeline..."):
+            st.success("Strategy Generated Successfully!")
 
-            response = requests.post(
-                f"{API_URL}/run-pipeline",
-                json={
-                    "linkedin_text": linkedin_text,
-                    "twitter_text": twitter_text
-                }
-            )
+            st.divider()
+            st.subheader("📈 AI Generated Posts")
 
-            data = response.json()
+            for post in result:
 
-        if data["status"] == "success":
+                st.markdown(f"### Day {post.get('day')} — {post.get('platform')}")
+                st.write("**Topic:**", post.get("topic"))
+                st.write("**Post Text:**", post.get("post_text"))
+                st.write("**Hashtags:**", post.get("hashtags"))
+                st.write("**Visual Concept:**", post.get("visual_concept"))
 
-            st.success("Pipeline completed")
+                st.divider()
 
-            # PROFILE REPORT
-            
+        except Exception as e:
 
-            st.header("Profile Intelligence")
-
-            st.json(data["profile_report"])
-
-            
-            # COMPETITOR REPORT
-            
-
-            st.header("Competitor Insights")
-
-            st.json(data["competitor_report"])
-
-            
-            # CONTENT CALENDAR
-            
-
-            st.header("Content Calendar")
-
-            calendar = data["calendar"]
-
-            for item in calendar:
-
-                st.write(
-                    f"Day {item.get('day')} | "
-                    f"{item.get('platform')} | "
-                    f"{item.get('topic')}"
-                )
-
-            
-            # GENERATED POSTS
-            
-
-            st.header("Generated Posts")
-
-            posts = data["generated_posts"]
-
-            for post in posts:
-
-                day = post.get("day")
-                topic = post.get("topic")
-                platform = post.get("platform")
-
-                with st.expander(f"Day {day} - {topic}"):
-
-                    st.subheader("Post Text")
-
-                    st.write(post.get("post_text"))
-
-                    if st.button(f"Rewrite Post {day}"):
-
-                        new_post = requests.post(
-                            f"{API_URL}/regenerate-post",
-                            json={
-                                "topic": topic,
-                                "platform": platform
-                            }
-                        )
-
-                        result = new_post.json()
-
-                        st.success("New version generated")
-
-                        st.write(result["post_text"])
-
-                    st.subheader("Hashtags")
-
-                    st.write(post.get("hashtags"))
-
-                    if st.button(f"New Hashtags {day}"):
-
-                        new_hashtags = requests.post(
-                            f"{API_URL}/regenerate-hashtags",
-                            json={
-                                "topic": topic,
-                                "platform": platform
-                            }
-                        )
-
-                        result = new_hashtags.json()
-
-                        st.success("New hashtags generated")
-
-                        st.write(result["hashtags"])
-
-                    st.subheader("Visual Concept")
-
-                    st.write(post.get("visual_concept"))
-
-        else:
-
-            st.error("Pipeline failed")
+            st.error("Something went wrong while running the AI pipeline.")
+            st.exception(e)
