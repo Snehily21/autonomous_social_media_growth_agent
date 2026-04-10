@@ -88,3 +88,11 @@ streamlit run frontend/streamlit_app.py
 
 GitHub  
 https://github.com/Snehily21
+
+
+
+# DOCKER RUN
+
+**RUN COMMAND IN TERMINAL
+
+-- docker-compose up --build
